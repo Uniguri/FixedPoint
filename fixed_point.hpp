@@ -29,12 +29,16 @@ class FixedPoint {
 
   static constexpr FixedPoint kFixedPi{3.1415926535897932384626433832795};
 
-  constexpr FixedPoint(void) : value_(0) {}
+  constexpr explicit FixedPoint(void) : value_(0) {}
 
-  constexpr FixedPoint(int value) : FixedPoint(static_cast<int64_t>(value)) {}
-  constexpr FixedPoint(int64_t value)
+  constexpr explicit FixedPoint(int32_t value)
+      : FixedPoint(static_cast<int64_t>(value)) {}
+  constexpr explicit FixedPoint(int64_t value)
       : value_(value << kNumberOfFractionBits) {}
-  constexpr FixedPoint(double value)
+
+  constexpr explicit FixedPoint(float value)
+      : FixedPoint(static_cast<double>(value)) {}
+  constexpr explicit FixedPoint(double value)
       : value_(static_cast<int64_t>(value * kConversionFactor)) {}
 
   constexpr FixedPoint(const FixedPoint& fp) : value_(fp.value_) {}
@@ -61,6 +65,10 @@ class FixedPoint {
     return static_cast<double>(value_) / kConversionFactor;
   }
 
+  constexpr inline int64_t ToInt64(void) const {
+    return (value_ >> kNumberOfFractionBits);
+  }
+
   inline std::string ToString(void) const {
     std::stringstream ss;
     ss << ToDouble();
@@ -68,14 +76,14 @@ class FixedPoint {
   }
 
   constexpr inline operator int32_t() const {
-    return static_cast<int64_t>(*this);
+    return static_cast<int32_t>(ToInt64());
   }
 
-  constexpr inline operator int64_t() const {
-    return value_ >> kNumberOfFractionBits;
-  }
+  constexpr inline operator int64_t() const { return ToInt64(); }
 
-  constexpr inline operator float() const { return static_cast<double>(*this); }
+  constexpr inline operator float() const {
+    return static_cast<float>(ToDouble());
+  }
 
   constexpr inline operator double() const { return ToDouble(); }
 
@@ -101,6 +109,35 @@ class FixedPoint {
 
   constexpr inline bool operator!=(const FixedPoint& rhs) const {
     return value_ != rhs.value_;
+  }
+
+  constexpr inline bool operator<(int64_t rhs) const {
+    return value_ < (rhs << kNumberOfFractionBits);
+  }
+
+  constexpr inline bool operator<=(int64_t rhs) const {
+    return value_ <= (rhs << kNumberOfFractionBits);
+  }
+
+  constexpr inline bool operator>(int64_t rhs) const {
+    return value_ > (rhs << kNumberOfFractionBits);
+  }
+
+  constexpr inline bool operator>=(int64_t rhs) const {
+    return value_ >= (rhs << kNumberOfFractionBits);
+  }
+
+  constexpr inline bool operator==(int64_t rhs) const {
+    return value_ == (rhs << kNumberOfFractionBits);
+  }
+
+  constexpr inline bool operator!=(int64_t rhs) const {
+    return value_ != (rhs << kNumberOfFractionBits);
+  }
+
+  constexpr inline FixedPoint& operator=(const FixedPoint& rhs) {
+    value_ = rhs.value_;
+    return *this;
   }
 
   constexpr inline FixedPoint& operator+=(const FixedPoint& rhs) {
@@ -132,7 +169,7 @@ class FixedPoint {
 
     value_ = 0;
     value_ += (integer_part1 * integer_part2) << kNumberOfFractionBits;
-    value_ += (integer_part1 * fraction_part1);
+    value_ += (integer_part1 * fraction_part2);
     value_ += (fraction_part1 * integer_part2);
     value_ += ((fraction_part1 * fraction_part2) >> kNumberOfFractionBits) &
               kFractionMask;
@@ -153,6 +190,84 @@ class FixedPoint {
     return FixedPoint(*this) /= rhs;
   }
 
+  constexpr inline FixedPoint& operator+=(int64_t rhs) {
+    value_ += (rhs << kNumberOfFractionBits);
+    return *this;
+  }
+
+  constexpr inline FixedPoint operator+(int64_t rhs) const {
+    return FixedPoint(*this) += rhs;
+  }
+
+  constexpr inline FixedPoint& operator-=(int64_t rhs) {
+    value_ -= (rhs << kNumberOfFractionBits);
+    return *this;
+  }
+
+  constexpr inline FixedPoint operator-(int64_t rhs) const {
+    return FixedPoint(*this) -= rhs;
+  }
+
+  constexpr inline FixedPoint& operator*=(int64_t rhs) {
+#if FIXED_POINT_USE_FAST_OPERATION == 1
+    value_ = (value_ * rhs);
+#else
+    const int64_t integer_part1 = value_ >> kNumberOfFractionBits;
+    const int64_t integer_part2 = rhs;
+    const int64_t fraction_part1 = value_ & kFractionMask;
+
+    value_ = 0;
+    value_ += (integer_part1 * integer_part2) << kNumberOfFractionBits;
+    value_ += (fraction_part1 * integer_part2);
+#endif
+    return *this;
+  }
+
+  constexpr inline FixedPoint operator*(int64_t rhs) const {
+    return FixedPoint(*this) *= rhs;
+  }
+
+  constexpr inline FixedPoint& operator/=(int64_t rhs) {
+    value_ /= rhs;
+    return *this;
+  }
+
+  constexpr inline FixedPoint operator/(int64_t rhs) const {
+    return FixedPoint(*this) /= rhs;
+  }
+
+  constexpr inline FixedPoint& operator+=(int32_t rhs) {
+    return *this += static_cast<int64_t>(rhs);
+  }
+
+  constexpr inline FixedPoint operator+(int32_t rhs) const {
+    return FixedPoint(*this) += rhs;
+  }
+
+  constexpr inline FixedPoint& operator-=(int32_t rhs) {
+    return *this -= static_cast<int64_t>(rhs);
+  }
+
+  constexpr inline FixedPoint operator-(int32_t rhs) const {
+    return FixedPoint(*this) -= rhs;
+  }
+
+  constexpr inline FixedPoint& operator*=(int32_t rhs) {
+    return *this *= static_cast<int64_t>(rhs);
+  }
+
+  constexpr inline FixedPoint operator*(int32_t rhs) const {
+    return FixedPoint(*this) *= rhs;
+  }
+
+  constexpr inline FixedPoint& operator/=(int32_t rhs) {
+    return *this /= static_cast<int64_t>(rhs);
+  }
+
+  constexpr inline FixedPoint operator/(int32_t rhs) const {
+    return FixedPoint(*this) /= rhs;
+  }
+
   constexpr inline FixedPoint operator-() const {
     FixedPoint temp{*this};
     temp.value_ *= -1;
@@ -160,29 +275,29 @@ class FixedPoint {
   }
 
   constexpr inline FixedPoint& operator++() {
-    value_ += (1 << kNumberOfFractionBits);
+    *this += 1;
     return *this;
   }
 
   constexpr inline FixedPoint operator++(int junk) {
     FixedPoint temp{*this};
-    value_ += (1 << kNumberOfFractionBits);
+    *this += 1;
     return temp;
   }
 
   constexpr inline FixedPoint& operator--() {
-    value_ -= (1 << kNumberOfFractionBits);
+    *this -= 1;
     return *this;
   }
 
   constexpr inline FixedPoint operator--(int junk) {
     FixedPoint temp{*this};
-    value_ -= (1 << kNumberOfFractionBits);
+    *this -= 1;
     return temp;
   }
 
   constexpr inline static FixedPoint floor(const FixedPoint& fp) {
-    return FixedPoint{fp.value_ >> kNumberOfFractionBits};
+    return FixedPoint{fp.ToInt64()};
   }
 
   constexpr inline static FixedPoint ceil(const FixedPoint& fp) {
