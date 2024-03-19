@@ -33,6 +33,11 @@ int main() {
   std::cout << FixedPoint<>::ceil(fp2) << std::endl;
   std::cout << FixedPoint<>::round(fp2) << std::endl;
   std::cout << FixedPoint<>::abs(fp2) << std::endl;
+  std::cout << FixedPoint<>::sin(fp2) << std::endl;
+  std::cout << FixedPoint<>::cos(fp2) << std::endl;
+  std::cout << FixedPoint<>::tan(fp2) << std::endl;
+  std::cout << FixedPoint<>::exp(fp2) << std::endl;
+  std::cout << FixedPoint<>::log(fp2) << std::endl;
 }
 ```
 

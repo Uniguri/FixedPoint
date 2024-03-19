@@ -3,6 +3,7 @@
 
 // Reference: http://www.sunshine2k.de/articles/coding/fp/sunfp.html
 
+#include <cassert>
 #include <cstdint>
 #include <iostream>
 #include <sstream>
@@ -10,15 +11,27 @@
 
 namespace fixed_point {
 
+namespace utility {
+constexpr inline uint64_t Factorial(const uint64_t n) {
+  if (n <= 2) {
+    return n;
+  }
+  return n * Factorial(n - 1llu);
+}
+}  // namespace utility
+
 template <uint32_t NUMBER_OF_FRACTION_BITS = 16>
 class FixedPoint {
  public:
   static const uint32_t kNumberOfFractionBits = NUMBER_OF_FRACTION_BITS;
-  static const uint64_t kFractionMask = (1 << kNumberOfFractionBits) - 1;
-  static const uint64_t kConversionFactor = (1 << kNumberOfFractionBits);
+  static const uint64_t kFractionMask = (1llu << kNumberOfFractionBits) - 1;
+  static const uint64_t kConversionFactor = (1llu << kNumberOfFractionBits);
+
+  static constexpr FixedPoint kFixedPi{3.1415926535897932384626433832795};
 
   constexpr FixedPoint(void) : value_(0) {}
 
+  constexpr FixedPoint(int value) : FixedPoint(static_cast<int64_t>(value)) {}
   constexpr FixedPoint(int64_t value)
       : value_(value << kNumberOfFractionBits) {}
   constexpr FixedPoint(double value)
@@ -66,8 +79,28 @@ class FixedPoint {
 
   constexpr inline operator double() const { return ToDouble(); }
 
-  constexpr inline bool operator==(const FixedPoint& rhs) {
+  constexpr inline bool operator<(const FixedPoint& rhs) const {
+    return value_ < rhs.value_;
+  }
+
+  constexpr inline bool operator<=(const FixedPoint& rhs) const {
+    return value_ <= rhs.value_;
+  }
+
+  constexpr inline bool operator>(const FixedPoint& rhs) const {
+    return value_ > rhs.value_;
+  }
+
+  constexpr inline bool operator>=(const FixedPoint& rhs) const {
+    return value_ >= rhs.value_;
+  }
+
+  constexpr inline bool operator==(const FixedPoint& rhs) const {
     return value_ == rhs.value_;
+  }
+
+  constexpr inline bool operator!=(const FixedPoint& rhs) const {
+    return value_ != rhs.value_;
   }
 
   constexpr inline FixedPoint& operator+=(const FixedPoint& rhs) {
@@ -165,6 +198,107 @@ class FixedPoint {
     return fp.value_ >= 0 ? FixedPoint{fp} : FromRawValue(-fp.value_);
   }
 
+  constexpr inline static FixedPoint sin(const FixedPoint& fp) {
+    assert(-kFixedPi <= fp && fp <= kFixedPi);
+    constexpr FixedPoint factorial3(
+        static_cast<int64_t>(utility::Factorial(3)));
+    constexpr FixedPoint factorial5(
+        static_cast<int64_t>(utility::Factorial(5)));
+    constexpr FixedPoint factorial7(
+        static_cast<int64_t>(utility::Factorial(7)));
+    constexpr FixedPoint factorial9(
+        static_cast<int64_t>(utility::Factorial(9)));
+
+    FixedPoint res{fp};
+    res -= FixedPoint::pow(fp, 3) / factorial3;
+    res += FixedPoint::pow(fp, 5) / factorial5;
+    res -= FixedPoint::pow(fp, 7) / factorial7;
+    res += FixedPoint::pow(fp, 9) / factorial9;
+    return res;
+  }
+
+  constexpr inline static FixedPoint cos(const FixedPoint& fp) {
+    assert(-kFixedPi <= fp && fp <= kFixedPi);
+    constexpr FixedPoint factorial2(
+        static_cast<int64_t>(utility::Factorial(2)));
+    constexpr FixedPoint factorial4(
+        static_cast<int64_t>(utility::Factorial(4)));
+    constexpr FixedPoint factorial6(
+        static_cast<int64_t>(utility::Factorial(6)));
+    constexpr FixedPoint factorial8(
+        static_cast<int64_t>(utility::Factorial(8)));
+
+    FixedPoint res{1};
+    res -= FixedPoint::pow(fp, 2) / factorial2;
+    res += FixedPoint::pow(fp, 4) / factorial4;
+    res -= FixedPoint::pow(fp, 6) / factorial6;
+    res += FixedPoint::pow(fp, 7) / factorial8;
+    return res;
+  }
+
+  constexpr inline static FixedPoint tan(const FixedPoint& fp) {
+    assert(-kFixedPi <= fp && fp <= kFixedPi);
+    const FixedPoint& sin = FixedPoint::sin(fp);
+    const FixedPoint& cos = FixedPoint::cos(fp);
+    assert(cos != FixedPoint(0));
+    return sin / cos;
+  }
+
+  constexpr inline static FixedPoint artanh(const FixedPoint& fp) {
+    constexpr FixedPoint factorial3(
+        static_cast<int64_t>(utility::Factorial(3)));
+    constexpr FixedPoint factorial5(
+        static_cast<int64_t>(utility::Factorial(5)));
+    constexpr FixedPoint factorial7(
+        static_cast<int64_t>(utility::Factorial(7)));
+    constexpr FixedPoint factorial9(
+        static_cast<int64_t>(utility::Factorial(9)));
+
+    FixedPoint res{fp};
+    res += FixedPoint::pow(fp, 3) / factorial3;
+    res += FixedPoint::pow(fp, 5) / factorial5;
+    res += FixedPoint::pow(fp, 7) / factorial7;
+    res += FixedPoint::pow(fp, 9) / factorial9;
+    return res;
+  }
+
+  constexpr static FixedPoint exp(const FixedPoint& fp) {
+    FixedPoint ret(1);
+    for (int i = 1; i <= 14; ++i) {
+      const FixedPoint fact(static_cast<int64_t>(utility::Factorial(i)));
+      const FixedPoint power(FixedPoint::pow(fp, i));
+      ret += (power / fact);
+    }
+    return ret;
+  }
+
+  constexpr static FixedPoint pow(const FixedPoint& fp, unsigned int n) {
+    if (n == 0) {
+      return FixedPoint{1};
+    } else {
+      FixedPoint res{fp};
+      for (unsigned int i = 0; i < n - 1; ++i) {
+        res *= fp;
+      }
+      return res;
+    }
+  }
+
+  constexpr inline static FixedPoint log(const FixedPoint& fp) {
+    assert(FixedPoint(0) <= fp);
+    return FixedPoint(2) * FixedPoint::artanh(fp);
+  }
+
+  constexpr static FixedPoint sqrt(const FixedPoint& fp) {
+    FixedPoint res{1};
+    constexpr FixedPoint error{0.001};
+    int i = 0;
+    while ((i < 10) && (FixedPoint::abs(res * res - fp) >= error)) {
+      res = FixedPoint(0.5) * (res + fp / res);
+    }
+    return res;
+  }
+
  private:
   int64_t value_;
 
@@ -174,11 +308,78 @@ class FixedPoint {
     fp = FixedPoint::FromString(s);
     return is;
   }
+
   friend std::ostream& operator<<(std::ostream& os, const FixedPoint& fp) {
     os << fp.ToString();
     return os;
   }
 };
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> floor(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::floor(fp);
+}
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> ceil(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::ceil(fp);
+}
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> round(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::round(fp);
+}
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> abs(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::abs(fp);
+}
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> sin(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::sin(fp);
+}
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> cos(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::cos(fp);
+}
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> tan(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::tan(fp);
+}
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> exp(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::exp(fp);
+}
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> pow(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp, unsigned int n) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::pow(fp, n);
+}
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> log(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::log(fp);
+}
+
+template <uint32_t NUMBER_OF_FRACTION_BITS>
+constexpr inline FixedPoint<NUMBER_OF_FRACTION_BITS> sqrt(
+    const FixedPoint<NUMBER_OF_FRACTION_BITS>& fp) {
+  return FixedPoint<NUMBER_OF_FRACTION_BITS>::sqrt(fp);
+}
 
 }  // namespace fixed_point
 
