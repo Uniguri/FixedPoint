@@ -111,30 +111,6 @@ class FixedPoint {
     return value_ != rhs.value_;
   }
 
-  constexpr inline bool operator<(int64_t rhs) const {
-    return value_ < (rhs << kNumberOfFractionBits);
-  }
-
-  constexpr inline bool operator<=(int64_t rhs) const {
-    return value_ <= (rhs << kNumberOfFractionBits);
-  }
-
-  constexpr inline bool operator>(int64_t rhs) const {
-    return value_ > (rhs << kNumberOfFractionBits);
-  }
-
-  constexpr inline bool operator>=(int64_t rhs) const {
-    return value_ >= (rhs << kNumberOfFractionBits);
-  }
-
-  constexpr inline bool operator==(int64_t rhs) const {
-    return value_ == (rhs << kNumberOfFractionBits);
-  }
-
-  constexpr inline bool operator!=(int64_t rhs) const {
-    return value_ != (rhs << kNumberOfFractionBits);
-  }
-
   constexpr inline FixedPoint& operator=(const FixedPoint& rhs) {
     value_ = rhs.value_;
     return *this;
@@ -190,24 +166,67 @@ class FixedPoint {
     return FixedPoint(*this) /= rhs;
   }
 
-  constexpr inline FixedPoint& operator+=(int64_t rhs) {
-    value_ += (rhs << kNumberOfFractionBits);
-    return *this;
+  template <typename F>
+  constexpr inline bool operator<(const F& rhs) const {
+    return value_ < FixedPoint(rhs);
   }
 
-  constexpr inline FixedPoint operator+(int64_t rhs) const {
+  template <typename F>
+  constexpr inline bool operator<=(const F& rhs) const {
+    return value_ <= FixedPoint(rhs);
+  }
+
+  template <typename F>
+  constexpr inline bool operator>(const F& rhs) const {
+    return value_ > FixedPoint(rhs);
+  }
+
+  template <typename F>
+  constexpr inline bool operator>=(const F& rhs) const {
+    return value_ >= FixedPoint(rhs);
+  }
+
+  template <typename F>
+  constexpr inline bool operator==(const F& rhs) const {
+    return value_ == FixedPoint(rhs);
+  }
+
+  template <typename F>
+  constexpr inline bool operator!=(const F& rhs) const {
+    return value_ != FixedPoint(rhs);
+  }
+
+  template <typename F>
+  constexpr inline FixedPoint& operator+=(const F& rhs) {
+    return *this += FixedPoint(rhs);
+  }
+
+  template <typename F>
+  constexpr inline FixedPoint operator+(const F& rhs) const {
     return FixedPoint(*this) += rhs;
   }
 
-  constexpr inline FixedPoint& operator-=(int64_t rhs) {
-    value_ -= (rhs << kNumberOfFractionBits);
-    return *this;
+  template <typename F>
+  constexpr inline FixedPoint& operator-=(const F& rhs) {
+    return *this -= FixedPoint(rhs);
   }
 
-  constexpr inline FixedPoint operator-(int64_t rhs) const {
+  template <typename F>
+  constexpr inline FixedPoint operator-(const F& rhs) const {
     return FixedPoint(*this) -= rhs;
   }
 
+  template <typename F>
+  constexpr inline FixedPoint& operator*=(const F& rhs) {
+    return *this *= FixedPoint(rhs);
+  }
+
+  template <int32_t>
+  constexpr inline FixedPoint& operator*=(int32_t rhs) {
+    return *this *= static_cast<int64_t>(rhs);
+  }
+
+  template <int64_t>
   constexpr inline FixedPoint& operator*=(int64_t rhs) {
 #if FIXED_POINT_USE_FAST_OPERATION == 1
     value_ = (value_ * rhs);
@@ -223,48 +242,49 @@ class FixedPoint {
     return *this;
   }
 
+  template <typename F>
+  constexpr inline FixedPoint operator*(const F& rhs) const {
+    return FixedPoint(*this) *= rhs;
+  }
+
+  template <int32_t>
+  constexpr inline FixedPoint operator*(int32_t rhs) const {
+    return FixedPoint(*this) *= rhs;
+  }
+
+  template <int64_t>
   constexpr inline FixedPoint operator*(int64_t rhs) const {
     return FixedPoint(*this) *= rhs;
   }
 
+  template <typename F>
+  constexpr inline FixedPoint& operator/=(const F& rhs) {
+    return *this /= FixedPoint(rhs);
+  }
+
+  template <int32_t>
+  constexpr inline FixedPoint& operator/=(int32_t rhs) {
+    return *this /= static_cast<int64_t>(rhs);
+  }
+
+  template <int64_t>
   constexpr inline FixedPoint& operator/=(int64_t rhs) {
     value_ /= rhs;
     return *this;
   }
 
-  constexpr inline FixedPoint operator/(int64_t rhs) const {
+  template <typename F>
+  constexpr inline FixedPoint operator/(const F& rhs) const {
     return FixedPoint(*this) /= rhs;
   }
 
-  constexpr inline FixedPoint& operator+=(int32_t rhs) {
-    return *this += static_cast<int64_t>(rhs);
-  }
-
-  constexpr inline FixedPoint operator+(int32_t rhs) const {
-    return FixedPoint(*this) += rhs;
-  }
-
-  constexpr inline FixedPoint& operator-=(int32_t rhs) {
-    return *this -= static_cast<int64_t>(rhs);
-  }
-
-  constexpr inline FixedPoint operator-(int32_t rhs) const {
-    return FixedPoint(*this) -= rhs;
-  }
-
-  constexpr inline FixedPoint& operator*=(int32_t rhs) {
-    return *this *= static_cast<int64_t>(rhs);
-  }
-
-  constexpr inline FixedPoint operator*(int32_t rhs) const {
-    return FixedPoint(*this) *= rhs;
-  }
-
-  constexpr inline FixedPoint& operator/=(int32_t rhs) {
-    return *this /= static_cast<int64_t>(rhs);
-  }
-
+  template <int32_t>
   constexpr inline FixedPoint operator/(int32_t rhs) const {
+    return FixedPoint(*this) /= rhs;
+  }
+
+  template <int64_t>
+  constexpr inline FixedPoint operator/(int64_t rhs) const {
     return FixedPoint(*this) /= rhs;
   }
 
