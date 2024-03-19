@@ -315,39 +315,31 @@ class FixedPoint {
 
   constexpr inline static FixedPoint sin(const FixedPoint& fp) {
     assert(-kFixedPi <= fp && fp <= kFixedPi);
-    constexpr FixedPoint factorial3(
-        static_cast<int64_t>(utility::Factorial(3)));
-    constexpr FixedPoint factorial5(
-        static_cast<int64_t>(utility::Factorial(5)));
-    constexpr FixedPoint factorial7(
-        static_cast<int64_t>(utility::Factorial(7)));
-    constexpr FixedPoint factorial9(
-        static_cast<int64_t>(utility::Factorial(9)));
+    constexpr int64_t fact3 = static_cast<int64_t>(utility::Factorial(3));
+    constexpr int64_t fact5 = static_cast<int64_t>(utility::Factorial(5));
+    constexpr int64_t fact7 = static_cast<int64_t>(utility::Factorial(7));
+    constexpr int64_t fact9 = static_cast<int64_t>(utility::Factorial(9));
 
     FixedPoint res{fp};
-    res -= FixedPoint::pow(fp, 3) / factorial3;
-    res += FixedPoint::pow(fp, 5) / factorial5;
-    res -= FixedPoint::pow(fp, 7) / factorial7;
-    res += FixedPoint::pow(fp, 9) / factorial9;
+    res -= FixedPoint::pow(fp, 3) / fact3;
+    res += FixedPoint::pow(fp, 5) / fact5;
+    res -= FixedPoint::pow(fp, 7) / fact7;
+    res += FixedPoint::pow(fp, 9) / fact9;
     return res;
   }
 
   constexpr inline static FixedPoint cos(const FixedPoint& fp) {
     assert(-kFixedPi <= fp && fp <= kFixedPi);
-    constexpr FixedPoint factorial2(
-        static_cast<int64_t>(utility::Factorial(2)));
-    constexpr FixedPoint factorial4(
-        static_cast<int64_t>(utility::Factorial(4)));
-    constexpr FixedPoint factorial6(
-        static_cast<int64_t>(utility::Factorial(6)));
-    constexpr FixedPoint factorial8(
-        static_cast<int64_t>(utility::Factorial(8)));
+    constexpr int64_t fact2 = static_cast<int64_t>(utility::Factorial(2));
+    constexpr int64_t fact4 = static_cast<int64_t>(utility::Factorial(4));
+    constexpr int64_t fact6 = static_cast<int64_t>(utility::Factorial(6));
+    constexpr int64_t fact8 = static_cast<int64_t>(utility::Factorial(8));
 
     FixedPoint res{1};
-    res -= FixedPoint::pow(fp, 2) / factorial2;
-    res += FixedPoint::pow(fp, 4) / factorial4;
-    res -= FixedPoint::pow(fp, 6) / factorial6;
-    res += FixedPoint::pow(fp, 7) / factorial8;
+    res -= FixedPoint::pow(fp, 2) / fact2;
+    res += FixedPoint::pow(fp, 4) / fact4;
+    res -= FixedPoint::pow(fp, 6) / fact6;
+    res += FixedPoint::pow(fp, 7) / fact8;
     return res;
   }
 
