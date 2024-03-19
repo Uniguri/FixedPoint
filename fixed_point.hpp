@@ -158,7 +158,14 @@ class FixedPoint {
   }
 
   constexpr inline FixedPoint& operator/=(const FixedPoint& rhs) {
+#if FIXED_POINT_USE_FAST_OPERATION == 1
     value_ = (value_ << kNumberOfFractionBits) / rhs.value_;
+#else
+    const FixedPoint temp =
+        FromRawValue((1llu << (2 * kNumberOfFractionBits - 1)) / rhs.value_) *
+        (*this);
+    value_ = temp.value_ << 1;
+#endif
     return *this;
   }
 
