@@ -31,7 +31,17 @@ class FixedPoint {
 
   constexpr explicit FixedPoint(void) : value_(0) {}
 
+  constexpr explicit FixedPoint(int8_t value)
+      : FixedPoint(static_cast<int64_t>(value)) {}
+  constexpr explicit FixedPoint(uint8_t value)
+      : FixedPoint(static_cast<int64_t>(value)) {}
+  constexpr explicit FixedPoint(int16_t value)
+      : FixedPoint(static_cast<int64_t>(value)) {}
   constexpr explicit FixedPoint(int32_t value)
+      : FixedPoint(static_cast<int64_t>(value)) {}
+  constexpr explicit FixedPoint(uint32_t value)
+      : FixedPoint(static_cast<int64_t>(value)) {}
+  constexpr explicit FixedPoint(uint64_t value)
       : FixedPoint(static_cast<int64_t>(value)) {}
   constexpr explicit FixedPoint(int64_t value)
       : value_(value << kNumberOfFractionBits) {}
@@ -80,7 +90,15 @@ class FixedPoint {
     return static_cast<int32_t>(ToInt64());
   }
 
+  constexpr inline operator uint32_t() const {
+    return static_cast<uint32_t>(ToInt64());
+  }
+
   constexpr inline operator int64_t() const { return ToInt64(); }
+
+  constexpr inline operator uint64_t() const {
+    return static_cast<uint64_t>(ToInt64());
+  }
 
   constexpr inline operator float() const {
     return static_cast<float>(ToDouble());
@@ -176,32 +194,32 @@ class FixedPoint {
 
   template <typename F>
   constexpr inline bool operator<(const F& rhs) const {
-    return value_ < FixedPoint(rhs);
+    return *this < FixedPoint(rhs);
   }
 
   template <typename F>
   constexpr inline bool operator<=(const F& rhs) const {
-    return value_ <= FixedPoint(rhs);
+    return *this <= FixedPoint(rhs);
   }
 
   template <typename F>
   constexpr inline bool operator>(const F& rhs) const {
-    return value_ > FixedPoint(rhs);
+    return *this > FixedPoint(rhs);
   }
 
   template <typename F>
   constexpr inline bool operator>=(const F& rhs) const {
-    return value_ >= FixedPoint(rhs);
+    return *this >= FixedPoint(rhs);
   }
 
   template <typename F>
   constexpr inline bool operator==(const F& rhs) const {
-    return value_ == FixedPoint(rhs);
+    return *this == FixedPoint(rhs);
   }
 
   template <typename F>
   constexpr inline bool operator!=(const F& rhs) const {
-    return value_ != FixedPoint(rhs);
+    return *this != FixedPoint(rhs);
   }
 
   template <typename F>
