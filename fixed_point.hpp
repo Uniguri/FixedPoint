@@ -27,7 +27,7 @@ class FixedPoint {
   static const uint64_t kFractionMask = (1llu << kNumberOfFractionBits) - 1;
   static const uint64_t kConversionFactor = (1llu << kNumberOfFractionBits);
 
-  static constexpr FixedPoint kFixedPi{3.1415926535897932384626433832795};
+  static constexpr FixedPoint kPi{3.1415926535897932384626433832795};
 
   constexpr explicit FixedPoint(void) : value_(0) {}
 
@@ -360,7 +360,7 @@ class FixedPoint {
   }
 
   constexpr inline static FixedPoint sin(const FixedPoint& fp) {
-    assert(-kFixedPi <= fp && fp <= kFixedPi);
+    assert(-kPi <= fp && fp <= kPi);
     constexpr int64_t fact3 = static_cast<int64_t>(utility::Factorial(3));
     constexpr int64_t fact5 = static_cast<int64_t>(utility::Factorial(5));
     constexpr int64_t fact7 = static_cast<int64_t>(utility::Factorial(7));
@@ -375,7 +375,7 @@ class FixedPoint {
   }
 
   constexpr inline static FixedPoint cos(const FixedPoint& fp) {
-    assert(-kFixedPi <= fp && fp <= kFixedPi);
+    assert(-kPi <= fp && fp <= kPi);
     constexpr int64_t fact2 = static_cast<int64_t>(utility::Factorial(2));
     constexpr int64_t fact4 = static_cast<int64_t>(utility::Factorial(4));
     constexpr int64_t fact6 = static_cast<int64_t>(utility::Factorial(6));
@@ -390,7 +390,7 @@ class FixedPoint {
   }
 
   constexpr inline static FixedPoint tan(const FixedPoint& fp) {
-    assert(-kFixedPi <= fp && fp <= kFixedPi);
+    assert(-kPi <= fp && fp <= kPi);
     const FixedPoint& sin = FixedPoint::sin(fp);
     const FixedPoint& cos = FixedPoint::cos(fp);
     assert(cos != FixedPoint(0));
