@@ -180,9 +180,13 @@ class FixedPoint {
 #if FIXED_POINT_USE_FAST_OPERATION == 1
     value_ = (value_ << kNumberOfFractionBits) / rhs.value_;
 #else
-    const FixedPoint temp =
-        FromRawValue((1llu << (2 * kNumberOfFractionBits - 1)) / rhs.value_) *
-        (*this);
+    const int rhs_sign = rhs >= 0 ? 1 : -1;
+    const int64_t rhs_value = rhs_sign * rhs.value_;
+
+    constexpr uint64_t kDivisionMagicNumber =
+        1llu << (2 * kNumberOfFractionBits - 1);
+    const int64_t temp_int = rhs_sign * (kDivisionMagicNumber / rhs_value);
+    const FixedPoint& temp = FromRawValue(temp_int) * (*this);
     value_ = temp.value_ << 1;
 #endif
     return *this;
